@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-tactical-bg: #030712;
+  --color-tactical-card: rgba(11, 19, 43, 0.45);
+  --color-tactical-card-hover: rgba(15, 23, 42, 0.6);
+  --color-tactical-border: rgba(148, 163, 184, 0.12);
+  --color-tactical-border-hover: rgba(56, 189, 248, 0.35);
+  --color-accent-orange: #ff6b02;
+  --color-accent-cyan: #00e5ff;
+  --color-status-success: #00f5d4;
+  --color-status-stuck: #fee440;
+  --color-status-danger: #ff0054;
+  --color-status-info: #00bbf9;
+}
+
+:root {
+  --background: #030712;
+  --foreground: #f8fafc;
+  
+  --tactical-dark: #0b132b;
+  --tactical-glass: rgba(11, 19, 43, 0.45);
+  --tactical-border: rgba(148, 163, 184, 0.12);
+  --tactical-border-hover: rgba(56, 189, 248, 0.35);
+  
+  --accent-orange: #ff6b02;
+  --accent-cyan: #00e5ff;
+  
+  --status-success: #00f5d4;
+  --status-stuck: #fee440;
+  --status-danger: #ff0054;
+  --status-info: #00bbf9;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Rubik', 'Inter', system-ui, -apple-system, sans-serif;
+  direction: rtl;
+  overflow-x: hidden;
+}
+
+/* Custom Tactical Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(3, 7, 18, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.15);
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan);
+}
+
+/* Glassmorphism Card Style */
+.tactical-glass-card {
+  background: var(--tactical-glass);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--tactical-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tactical-glass-card:hover {
+  border-color: var(--tactical-border-hover);
+  box-shadow: 0 8px 32px 0 rgba(0, 229, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Glowing Border for simulations or active elements */
+.tactical-glow-cyan {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.25);
+}
+
+.tactical-glow-orange {
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 15px rgba(255, 107, 2, 0.25);
+}
+
+/* Glossy Highlights Sweep Animation */
+.tactical-gloss-highlight {
+  position: relative;
+  overflow: hidden;
+}
+
+.tactical-gloss-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  transition: 0.75s;
+}
+
+.tactical-gloss-highlight:hover::before {
+  left: 150%;
+}
+
+/* Scanline and Tactical Overlay Effects */
+.tactical-overlay {
+  background: radial-gradient(circle, rgba(16, 24, 48, 0.2) 0%, rgba(3, 7, 18, 0.85) 100%);
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.tactical-overlay::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  z-index: 2;
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+/* Utility Animations */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.4; }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s infinite ease-in-out;
+}
