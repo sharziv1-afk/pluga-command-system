@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Mail, ShieldCheck, UserRound } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlossyButton } from '@/components/ui/GlossyButton';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
@@ -118,6 +118,9 @@ export default function LoginPage() {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
   const [isDevSubmitting, setIsDevSubmitting] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
@@ -166,6 +169,9 @@ export default function LoginPage() {
     setOtpCode('');
     setPassword('');
     setConfirmPassword('');
+    setShowLoginPassword(false);
+    setShowRegPassword(false);
+    setShowRegConfirmPassword(false);
     setMessage(null);
     setError(null);
   };
@@ -540,15 +546,23 @@ export default function LoginPage() {
                 <span className="relative block">
                   <KeyRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
                   <input
-                    type="password"
+                    type={showLoginPassword ? 'text' : 'password'}
                     dir="ltr"
                     required
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="••••••••"
-                    className="command-input pl-11 text-left"
+                    className="command-input pl-11 pr-11 text-left"
                     disabled={isLoggingIn}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword((prev) => !prev)}
+                    className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3] hover:text-[#FF6B02] transition-colors focus:outline-none"
+                    aria-label={showLoginPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
+                  >
+                    {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </span>
               </label>
 
@@ -627,15 +641,23 @@ export default function LoginPage() {
                       <span className="relative block">
                         <KeyRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
                         <input
-                          type="password"
+                          type={showRegPassword ? 'text' : 'password'}
                           dir="ltr"
                           required
                           value={password}
                           onChange={(event) => setPassword(event.target.value)}
                           placeholder="••••••••"
-                          className="command-input pl-11 text-left"
+                          className="command-input pl-11 pr-11 text-left"
                           disabled={isSendingOtp}
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegPassword((prev) => !prev)}
+                          className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3] hover:text-[#FF6B02] transition-colors focus:outline-none"
+                          aria-label={showRegPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
+                        >
+                          {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                       </span>
                     </label>
 
@@ -644,15 +666,23 @@ export default function LoginPage() {
                       <span className="relative block">
                         <KeyRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
                         <input
-                          type="password"
+                          type={showRegConfirmPassword ? 'text' : 'password'}
                           dir="ltr"
                           required
                           value={confirmPassword}
                           onChange={(event) => setConfirmPassword(event.target.value)}
                           placeholder="••••••••"
-                          className="command-input pl-11 text-left"
+                          className="command-input pl-11 pr-11 text-left"
                           disabled={isSendingOtp}
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegConfirmPassword((prev) => !prev)}
+                          className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3] hover:text-[#FF6B02] transition-colors focus:outline-none"
+                          aria-label={showRegConfirmPassword ? 'הסתר סיסמה' : 'הצג סיסמה'}
+                        >
+                          {showRegConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                       </span>
                     </label>
                   </div>
