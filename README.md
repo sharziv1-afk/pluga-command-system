@@ -87,7 +87,7 @@ Current project state:
 
 ## Auth Status
 
-Supabase Magic Link auth is wired through:
+Supabase Auth is wired through:
 
 - `src/app/(auth)/login/page.tsx`
 - `src/app/auth/callback/route.ts`
@@ -95,18 +95,51 @@ Supabase Magic Link auth is wired through:
 - `src/lib/supabase/server.ts`
 - `src/proxy.ts`
 
+The active `/login` screen is now an **Email OTP code identification flow** with two modes:
+
+- Existing user login: sends an email OTP with `shouldCreateUser: false`, verifies the code with `verifyOtp`, then routes by `public.users` profile status.
+- First registration: sends an email OTP with `shouldCreateUser: true`, creates/updates `public.users` only after `verifyOtp`, then redirects to `/onboarding`.
+
+`/auth/callback` remains in place as a Magic Link fallback and has not been removed.
+
+Development-only login with email/password is still present on `/login` when `NODE_ENV !== "production"` to avoid wasting Supabase emails during local development.
+
 Known current issue:
 
 ```txt
 Supabase Auth 429 over_email_send_rate_limit
 ```
 
-This is a Supabase email rate limit, not a UI bug. Magic Link end-to-end still requires testing after the rate limit expires.
+This is a Supabase email rate limit, not a UI bug. Do not trigger email sends during automated development checks.
+
+### Supabase Email Template Requirement
+
+For the OTP code flow, update Supabase manually:
+
+```txt
+Authentication -> Email Templates
+```
+
+The email template must include:
+
+```txt
+{{ .Token }}
+```
+
+If the template only includes:
+
+```txt
+{{ .ConfirmationURL }}
+```
+
+Supabase will still send a link instead of a code. This is configured in Supabase, not in application code.
 
 Manual verification still needed:
 
-- Magic Link callback reaches `/auth/callback`
-- `public.users` profile is created
+- Email OTP delivery with `{{ .Token }}`
+- Existing user code verification and profile redirect
+- First registration code verification
+- `public.users` profile is created only after OTP verification
 - New user redirects to `/onboarding`
 - Pending user redirects to `/pending-approval`
 - Approved active user reaches `/dashboard`
@@ -181,9 +214,10 @@ Protected route checks are handled by `src/proxy.ts`.
 
 1. Finish visual QA on `/login`, `/onboarding`, `/select-role`, `/pending-approval`, and `/dashboard`.
 2. Re-test at mobile width `390x844`.
-3. After Supabase rate limit ends, test Magic Link end-to-end once.
-4. Verify `public.users` profile creation and redirects.
-5. Only after auth callback is verified, continue onboarding/admin/product logic work.
+3. Configure the Supabase Email Template to include `{{ .Token }}`.
+4. After Supabase rate limit ends, send one OTP email manually from `/login`.
+5. Verify `public.users` profile creation and redirects.
+6. Only after OTP and fallback callback behavior are verified, continue onboarding/admin/product logic work.
 
 ## Guardrails
 

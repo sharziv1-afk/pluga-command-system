@@ -22,7 +22,9 @@ RLS policies for `public.users` were added manually in Supabase after profile cr
 ## What Has Been Done
 
 - Supabase client/server helpers are connected.
-- Magic Link login UI and request flow exist.
+- `/login` now uses Email OTP code identification with existing-user login and first-registration modes.
+- First registration creates/updates `public.users` only after `verifyOtp` succeeds.
+- Development-only password login remains available locally and is hidden in production.
 - Auth callback route exists.
 - Auth callback profile creation was adjusted to include all required NOT NULL fields for `public.users`.
 - Protected route proxy exists.
@@ -54,19 +56,34 @@ Screens aligned in this pass:
 
 ## Auth Status
 
-Supabase Magic Link is implemented but not fully verified end-to-end because Supabase currently returns:
+Supabase Email OTP is implemented in `/login` but not fully verified end-to-end because Supabase currently returns:
 
 ```txt
 429 over_email_send_rate_limit
 ```
 
-After the manual RLS policy update, Magic Link still requires a live verification pass because the project reached the Supabase email rate limit again.
+After the manual RLS policy update, Email OTP and the Magic Link fallback still require a live verification pass because the project reached the Supabase email rate limit again.
 
-After the rate limit expires, send one Magic Link and test:
+Before live testing, manually update Supabase:
 
-- Magic Link email delivery
-- `/auth/callback`
-- `public.users` profile creation after RLS policies
+```txt
+Authentication -> Email Templates
+```
+
+The template must include:
+
+```txt
+{{ .Token }}
+```
+
+If it only includes `{{ .ConfirmationURL }}`, Supabase will keep sending a link instead of a code.
+
+After the rate limit expires, send one OTP code from `/login` and test:
+
+- Email OTP delivery
+- Existing-user `verifyOtp`
+- First-registration `verifyOtp`
+- `public.users` profile creation after OTP verification and RLS policies
 - redirect to `/onboarding`
 - redirect to `/pending-approval`
 - approved user access to `/dashboard`
@@ -90,4 +107,4 @@ npx tsc -p tsconfig.json --noEmit
 npm run build
 ```
 
-Then wait for the Supabase rate limit, send one Magic Link, verify `public.users` receives a profile row, and confirm redirect to `/onboarding`.
+Then wait for the Supabase rate limit, send one OTP code from `/login`, verify `public.users` receives a profile row only after code verification, and confirm redirect to `/onboarding`.

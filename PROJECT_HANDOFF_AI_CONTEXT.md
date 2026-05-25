@@ -64,11 +64,15 @@ Important files:
 Current auth status:
 
 - Supabase Auth is connected.
-- Magic Link request flow exists.
-- Callback route exists and should create/find `public.users` profiles.
+- `/login` now uses an Email OTP code identification flow with two modes:
+  - Existing user login: `signInWithOtp({ shouldCreateUser: false })`, then `verifyOtp`.
+  - First registration: `signInWithOtp({ shouldCreateUser: true })`, then `verifyOtp`, then create/update `public.users`.
+- Profile creation for first registration happens only after OTP verification.
+- Callback route remains as a Magic Link fallback and should create/find `public.users` profiles if a Magic Link is used.
 - Callback was adjusted to create a new `public.users` profile with the required NOT NULL fields.
 - Protected route proxy exists.
-- Magic Link after the manual RLS policy update still requires live verification because Supabase reached the email rate limit again.
+- Email OTP and Magic Link fallback still require live verification because Supabase reached the email rate limit again.
+- Development-only password login remains in `/login` for local work and must not be exposed in production.
 
 Known issue:
 
@@ -78,14 +82,23 @@ Supabase Auth 429 over_email_send_rate_limit
 
 Treat this as a Supabase rate limit, not an auth code bug.
 
+Supabase Email Template requirement:
+
+- In Supabase, open `Authentication -> Email Templates`.
+- The template must include `{{ .Token }}` for OTP code emails.
+- If it only contains `{{ .ConfirmationURL }}`, Supabase will send a link instead of a code.
+- Do not try to fix this in application code.
+
 Still requires manual verification:
 
-- Magic Link callback reaches `/auth/callback`
-- `exchangeCodeForSession` succeeds
-- `public.users` profile creation succeeds after the manual RLS policies
+- One Email OTP send after rate limit expires
+- `verifyOtp` succeeds for existing user login
+- `verifyOtp` succeeds for first registration
+- `public.users` profile creation succeeds only after OTP verification
 - New users redirect to `/onboarding`
 - Pending users redirect to `/pending-approval`
 - Approved active users redirect to `/dashboard`
+- Magic Link callback fallback still reaches `/auth/callback` if used
 
 ## Demo Layer Warning
 
@@ -254,12 +267,13 @@ Check:
 
 1. Finish visual QA for the updated light gloss screens.
 2. Verify lint, TypeScript, and build.
-3. Wait for the Supabase email rate limit to expire.
-4. Send exactly one Magic Link for a live verification pass.
-5. Confirm that a row is created in `public.users`.
-6. Confirm redirect to `/onboarding`.
-7. If profile creation still fails, read the development terminal log for `Profile create failed` and inspect `message`, `code`, `details`, and `hint`.
-8. Only then continue onboarding/admin approval/product logic.
+3. Ensure the Supabase Email Template contains `{{ .Token }}`.
+4. Wait for the Supabase email rate limit to expire.
+5. Send exactly one OTP code from `/login` for a live verification pass.
+6. Confirm that a row is created in `public.users` after `verifyOtp`.
+7. Confirm redirect to `/onboarding`.
+8. If profile creation still fails, read the development terminal log for `Registration profile upsert failed` and inspect `message`, `code`, `details`, and `hint`.
+9. Only then continue onboarding/admin approval/product logic.
 
 ## Guardrails For Future Agents
 

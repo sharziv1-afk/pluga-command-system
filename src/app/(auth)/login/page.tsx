@@ -1,19 +1,71 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck, UserRound } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlossyButton } from '@/components/ui/GlossyButton';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
+type AuthMode = 'existing' | 'register';
+type OtpStep = 'form' | 'code';
+
 type AppUserProfile = {
   id: string;
+  auth_user_id: string | null;
+  email: string;
   status: 'active' | 'pending' | 'blocked' | 'inactive';
   role_approval_status: 'pending' | 'approved' | 'rejected';
   has_completed_onboarding: boolean;
 };
+
+type RoleOption = {
+  name: string;
+};
+
+type UnitOption = {
+  id: string | null;
+  name: string;
+};
+
+type RegistrationDraft = {
+  fullName: string;
+  email: string;
+  role: string;
+  unitId: string | null;
+};
+
+const profileSelect = 'id,auth_user_id,email,status,role_approval_status,has_completed_onboarding';
+
+const fallbackRoles: RoleOption[] = [
+  { name: 'מ״פ' },
+  { name: 'סמ״פ' },
+  { name: 'ע. מ״פ' },
+  { name: 'רס״פ / לוגיסטיקה' },
+  { name: 'חובש פלוגתי' },
+  { name: 'קשר פלוגתי' },
+  { name: 'מ״מ 1' },
+  { name: 'מ״מ 2' },
+  { name: 'מ״מ 3' },
+  { name: 'מ״מ 4' },
+  { name: 'מ״כ 1א' },
+  { name: 'מ״כ 2א' },
+  { name: 'מ״כ 3א' },
+  { name: 'מ״כ 4א' },
+];
+
+const fallbackUnits: UnitOption[] = [
+  { id: null, name: 'פלוגה' },
+  { id: null, name: 'מחלקה 1' },
+  { id: null, name: 'מחלקה 2' },
+  { id: null, name: 'מחלקה 3' },
+  { id: null, name: 'מחלקה 4' },
+  { id: null, name: 'לוגיסטיקה' },
+  { id: null, name: 'רפואה' },
+  { id: null, name: 'קשר' },
+  { id: null, name: 'רכב' },
+];
 
 function getProfileRedirectPath(profile: AppUserProfile): string {
   if (!profile.has_completed_onboarding) return '/onboarding';
@@ -23,72 +75,323 @@ function getProfileRedirectPath(profile: AppUserProfile): string {
   return '/pending-approval';
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+function isRateLimitError(error: { message?: string; code?: string; status?: number } | null) {
+  const message = error?.message?.toLowerCase() ?? '';
+  const code = error?.code?.toLowerCase() ?? '';
+
+  return error?.status === 429 || code.includes('rate') || message.includes('rate') || message.includes('too many');
+}
+
+function logDevelopmentError(message: string, error: { message?: string; code?: string; details?: string; hint?: string } | null) {
+  if (process.env.NODE_ENV !== 'development') return;
+
+  console.error(message, {
+    message: error?.message,
+    code: error?.code,
+    details: error?.details,
+    hint: error?.hint,
+  });
+}
+
 export default function LoginPage() {
   const isDevelopment = process.env.NODE_ENV !== 'production';
+  const [authMode, setAuthMode] = useState<AuthMode>('existing');
+  const [otpStep, setOtpStep] = useState<OtpStep>('form');
   const [email, setEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [selectedRole, setSelectedRole] = useState(fallbackRoles[0].name);
+  const [selectedUnitId, setSelectedUnitId] = useState<string>('none');
+  const [registrationDraft, setRegistrationDraft] = useState<RegistrationDraft | null>(null);
+  const [roleOptions, setRoleOptions] = useState<RoleOption[]>(fallbackRoles);
+  const [unitOptions, setUnitOptions] = useState<UnitOption[]>(fallbackUnits);
   const [devEmail, setDevEmail] = useState(isDevelopment ? 'dev@pluga.local' : '');
   const [devPassword, setDevPassword] = useState(isDevelopment ? 'Dev123456!' : '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isDevSubmitting, setIsDevSubmitting] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [devError, setDevError] = useState<string | null>(null);
 
-  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+
+    async function loadIdentityOptions() {
+      const [{ data: roles }, { data: units }] = await Promise.all([
+        supabase.from('roles').select('name').order('permission_level', { ascending: false }),
+        supabase.from('units').select('id,name').order('created_at', { ascending: true }),
+      ]);
+
+      if (roles?.length) {
+        setRoleOptions(roles);
+        setSelectedRole((currentRole) => roles.some((role) => role.name === currentRole) ? currentRole : roles[0].name);
+      }
+
+      if (units?.length) {
+        setUnitOptions(units);
+        setSelectedUnitId((currentUnitId) => {
+          if (currentUnitId !== 'none' && units.some((unit) => unit.id === currentUnitId)) return currentUnitId;
+          return units[0].id ?? 'none';
+        });
+      }
+    }
+
+    loadIdentityOptions();
+  }, []);
+
+  useEffect(() => {
+    if (cooldownSeconds <= 0) return;
+
+    const timeout = window.setTimeout(() => {
+      setCooldownSeconds((currentValue) => Math.max(0, currentValue - 1));
+    }, 1000);
+
+    return () => window.clearTimeout(timeout);
+  }, [cooldownSeconds]);
+
+  const resetOtpState = (nextMode = authMode) => {
+    setAuthMode(nextMode);
+    setOtpStep('form');
+    setOtpCode('');
+    setMessage(null);
+    setError(null);
+  };
+
+  const sendExistingUserCode = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsSubmitting(true);
+    if (isSendingOtp || cooldownSeconds > 0) return;
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    setIsSendingOtp(true);
     setMessage(null);
     setError(null);
 
     try {
       const supabase = createSupabaseBrowserClient();
-      const redirectTo = `${window.location.origin}/auth/callback`;
-
       const { error: signInError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+        email: normalizedEmail,
         options: {
-          emailRedirectTo: redirectTo,
+          shouldCreateUser: false,
+        },
+      });
+
+      if (signInError) {
+        setError(
+          isRateLimitError(signInError)
+            ? 'נשלחו יותר מדי קודים. נסה שוב מאוחר יותר.'
+            : `לא הצלחנו לשלוח קוד כניסה: ${signInError.message}`
+        );
+        return;
+      }
+
+      setEmail(normalizedEmail);
+      setOtpStep('code');
+      setCooldownSeconds(60);
+      setMessage('שלחנו קוד אימות למייל.');
+    } catch (unknownError) {
+      setError(`לא הצלחנו לשלוח קוד כניסה: ${getErrorMessage(unknownError)}`);
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const sendRegistrationCode = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSendingOtp || cooldownSeconds > 0) return;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = fullName.trim();
+    const selectedUnit = selectedUnitId === 'none' ? null : selectedUnitId;
+
+    setIsSendingOtp(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: signInError } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
           shouldCreateUser: true,
         },
       });
 
       if (signInError) {
-        if (isDevelopment) {
-          console.error('Supabase signInWithOtp failed:', signInError);
-
-          const devDetails = [
-            signInError.message,
-            'status' in signInError && signInError.status ? `status: ${signInError.status}` : null,
-            'code' in signInError && signInError.code ? `code: ${signInError.code}` : null,
-          ].filter(Boolean).join(' | ');
-
-          setError(
-            devDetails
-              ? `לא הצלחנו לשלוח קישור כניסה. שגיאת Supabase: ${devDetails}`
-              : 'לא הצלחנו לשלוח קישור כניסה. Supabase החזיר שגיאה ללא פירוט.'
-          );
-          return;
-        }
-        setError('לא הצלחנו לשלוח קישור כניסה. בדוק את כתובת הדוא"ל ונסה שוב.');
-        return;
-      }
-
-      setMessage('שלחנו אליך קישור כניסה מאובטח. פתח את הדוא"ל ואשר כניסה למערכת.');
-    } catch (unknownError) {
-      if (isDevelopment) {
-        console.error('Unexpected login error:', unknownError);
-
-        const devMessage = unknownError instanceof Error ? unknownError.message : String(unknownError);
         setError(
-          devMessage
-            ? `אירעה שגיאה בחיבור למערכת ההזדהות. שגיאת development: ${devMessage}`
-            : 'אירעה שגיאה בחיבור למערכת ההזדהות. שגיאת development ללא פירוט.'
+          isRateLimitError(signInError)
+            ? 'נשלחו יותר מדי קודים. נסה שוב מאוחר יותר.'
+            : `לא הצלחנו לשלוח קוד אימות: ${signInError.message}`
         );
         return;
       }
-      setError('אירעה שגיאה בחיבור למערכת ההזדהות. נסה שוב בעוד רגע.');
+
+      setEmail(normalizedEmail);
+      setRegistrationDraft({
+        fullName: normalizedName,
+        email: normalizedEmail,
+        role: selectedRole,
+        unitId: selectedUnit,
+      });
+      setOtpStep('code');
+      setCooldownSeconds(60);
+      setMessage('שלחנו קוד אימות למייל.');
+    } catch (unknownError) {
+      setError(`לא הצלחנו לשלוח קוד אימות: ${getErrorMessage(unknownError)}`);
     } finally {
-      setIsSubmitting(false);
+      setIsSendingOtp(false);
+    }
+  };
+
+  const verifyExistingUserCode = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isVerifyingOtp) return;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedToken = otpCode.trim();
+
+    setIsVerifyingOtp(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+        email: normalizedEmail,
+        token: normalizedToken,
+        type: 'email',
+      });
+
+      if (verifyError || !verifyData.user) {
+        setError(`קוד האימות לא אושר: ${verifyError?.message ?? 'לא נמצא משתמש מאומת'}`);
+        return;
+      }
+
+      const authUser = verifyData.user;
+      let { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select(profileSelect)
+        .eq('auth_user_id', authUser.id)
+        .maybeSingle<AppUserProfile>();
+
+      if (!profile && !profileError) {
+        const result = await supabase
+          .from('users')
+          .select(profileSelect)
+          .eq('email', normalizedEmail)
+          .maybeSingle<AppUserProfile>();
+
+        profile = result.data;
+        profileError = result.error;
+      }
+
+      if (profileError) {
+        setError(`לא ניתן לקרוא פרופיל משתמש: ${profileError.message}`);
+        return;
+      }
+
+      if (!profile) {
+        setError('לא נמצא פרופיל למייל הזה. יש לבצע הרשמה ראשונה.');
+        return;
+      }
+
+      if (profile.status === 'blocked') {
+        setError('המשתמש חסום. פנה למנהל המערכת.');
+        return;
+      }
+
+      if (profile.status === 'inactive') {
+        setError('המשתמש אינו פעיל. פנה למנהל המערכת.');
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', profile.id);
+
+      if (updateError) {
+        logDevelopmentError('Existing user last_login_at update failed', updateError);
+      }
+
+      window.location.href = getProfileRedirectPath(profile);
+    } catch (unknownError) {
+      setError(`אימות הקוד נכשל: ${getErrorMessage(unknownError)}`);
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const verifyRegistrationCode = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isVerifyingOtp || !registrationDraft) return;
+
+    const normalizedToken = otpCode.trim();
+
+    setIsVerifyingOtp(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+        email: registrationDraft.email,
+        token: normalizedToken,
+        type: 'email',
+      });
+
+      if (verifyError || !verifyData.user) {
+        setError(`קוד האימות לא אושר: ${verifyError?.message ?? 'לא נמצא משתמש מאומת'}`);
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const profilePayload = {
+        auth_user_id: verifyData.user.id,
+        email: registrationDraft.email,
+        name: registrationDraft.fullName,
+        role: registrationDraft.role,
+        unit_id: registrationDraft.unitId,
+        permission_level: 0,
+        has_completed_onboarding: false,
+        role_approval_status: 'pending',
+        status: 'pending',
+        last_login_at: now,
+      };
+
+      const { data: existingProfile, error: lookupError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', registrationDraft.email)
+        .maybeSingle<{ id: string }>();
+
+      if (lookupError) {
+        setError(`לא ניתן לבדוק פרופיל קיים: ${lookupError.message}`);
+        return;
+      }
+
+      const result = existingProfile
+        ? await supabase.from('users').update(profilePayload).eq('id', existingProfile.id).select('id').single()
+        : await supabase.from('users').insert(profilePayload).select('id').single();
+
+      if (result.error) {
+        logDevelopmentError('Registration profile upsert failed', result.error);
+        setError(`לא הצלחנו ליצור או לעדכן פרופיל ב-public.users: ${result.error.message}`);
+        return;
+      }
+
+      window.location.href = '/onboarding';
+    } catch (unknownError) {
+      setError(`אימות הקוד נכשל: ${getErrorMessage(unknownError)}`);
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -125,7 +428,7 @@ export default function LoginPage() {
 
       const { data: profile, error: profileError } = await supabase
         .from('users')
-        .select('id,status,role_approval_status,has_completed_onboarding')
+        .select(profileSelect)
         .eq('auth_user_id', authUser.id)
         .maybeSingle<AppUserProfile>();
 
@@ -141,21 +444,23 @@ export default function LoginPage() {
 
       window.location.href = getProfileRedirectPath(profile);
     } catch (unknownError) {
-      const devMessage = unknownError instanceof Error ? unknownError.message : String(unknownError);
-      setDevError(`כניסת פיתוח נכשלה: ${devMessage}`);
+      setDevError(`כניסת פיתוח נכשלה: ${getErrorMessage(unknownError)}`);
     } finally {
       setIsDevSubmitting(false);
     }
   };
 
+  const isCodeStep = otpStep === 'code';
+  const cooldownText = cooldownSeconds > 0 ? `אפשר לשלוח קוד נוסף בעוד ${cooldownSeconds} שניות` : null;
+
   return (
-    <main className="command-page-shell relative flex items-center justify-center p-4 sm:p-6 text-right">
+    <main className="command-page-shell relative flex items-center justify-center p-4 text-right sm:p-6">
       <div className="command-auth-overlay pointer-events-none absolute inset-0" />
       <div className="absolute left-4 top-4 z-20">
         <ThemeToggle />
       </div>
 
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-full max-w-lg">
         <div className="mb-5 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#FF6B02]/20 bg-[#FF6B02]/10 text-[#FF6B02] shadow-[0_14px_30px_rgba(255,107,2,0.14)]">
             <ShieldCheck className="h-6 w-6" />
@@ -165,63 +470,273 @@ export default function LoginPage() {
         </div>
 
         <GlassCard glow="orange" className="auth-dark-card w-full">
-          <div className="mb-6 text-center">
-            <h1 className="text-xl font-black text-[#020108]">כניסה למערכת</h1>
+          <div className="mb-5 text-center">
+            <h1 className="text-xl font-black text-[#020108]">זיהוי וכניסה למערכת</h1>
             <p className="mt-2 text-sm leading-relaxed text-[#667085]">
-              הזן דוא"ל כדי לקבל קישור כניסה מאובטח
+              קוד אימות חד-פעמי יישלח למייל, ולאחר הזנתו נמשיך לפי סטטוס הפרופיל.
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <label className="block space-y-2">
-              <span className="block text-xs font-black text-[#344054]">דוא"ל</span>
-              <span className="relative block">
-                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
-                <input
-                  type="email"
-                  dir="ltr"
-                  required
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="commander@example.com"
-                  className="command-input pl-11 text-left"
-                  disabled={isSubmitting}
-                />
-              </span>
-            </label>
-
-            {message && (
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm leading-relaxed text-emerald-800">
-                {message}
-              </div>
-            )}
-
-            {error && (
-              <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm leading-relaxed text-red-800">
-                {error}
-              </div>
-            )}
-
-            <GlossyButton
-              type="submit"
-              variant="orange"
-              size="lg"
-              className="w-full justify-center"
-              disabled={isSubmitting}
+          <div className="mb-5 grid grid-cols-2 gap-2 rounded-2xl border border-[rgba(2,1,8,0.08)] bg-white/58 p-1">
+            <button
+              type="button"
+              onClick={() => resetOtpState('existing')}
+              className={`min-h-11 rounded-xl px-3 text-sm font-black transition-all duration-150 ${
+                authMode === 'existing'
+                  ? 'bg-[#FF6B02] text-white shadow-[0_12px_24px_rgba(255,107,2,0.20)]'
+                  : 'text-[#667085] hover:bg-[#FF6B02]/10 hover:text-[#020108]'
+              }`}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  שולח קישור כניסה
-                </>
-              ) : (
-                'קבל קישור כניסה'
+              כניסה למשתמש קיים
+            </button>
+            <button
+              type="button"
+              onClick={() => resetOtpState('register')}
+              className={`min-h-11 rounded-xl px-3 text-sm font-black transition-all duration-150 ${
+                authMode === 'register'
+                  ? 'bg-[#FF6B02] text-white shadow-[0_12px_24px_rgba(255,107,2,0.20)]'
+                  : 'text-[#667085] hover:bg-[#FF6B02]/10 hover:text-[#020108]'
+              }`}
+            >
+              הרשמה ראשונה
+            </button>
+          </div>
+
+          {authMode === 'existing' && (
+            <form onSubmit={isCodeStep ? verifyExistingUserCode : sendExistingUserCode} className="space-y-4">
+              <label className="block space-y-2">
+                <span className="block text-xs font-black text-[#344054]">דוא״ל</span>
+                <span className="relative block">
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
+                  <input
+                    type="email"
+                    dir="ltr"
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="commander@example.com"
+                    className="command-input pl-11 text-left"
+                    disabled={isSendingOtp || isVerifyingOtp || isCodeStep}
+                  />
+                </span>
+              </label>
+
+              {isCodeStep && (
+                <label className="block space-y-2">
+                  <span className="block text-xs font-black text-[#344054]">קוד אימות</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    dir="ltr"
+                    required
+                    value={otpCode}
+                    onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="000000"
+                    className="command-input text-center text-lg font-black tracking-[0.28em]"
+                    disabled={isVerifyingOtp}
+                  />
+                </label>
               )}
-            </GlossyButton>
-          </form>
+
+              {message && (
+                <div className="flex items-start gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm leading-relaxed text-emerald-800">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{message}</span>
+                </div>
+              )}
+
+              {error && (
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm leading-relaxed text-red-800">
+                  {error}
+                </div>
+              )}
+
+              {cooldownText && (
+                <div className="rounded-2xl border border-[#FF6B02]/18 bg-[#FF6B02]/10 px-4 py-3 text-center text-xs font-black text-[#9A4600]">
+                  {cooldownText}
+                </div>
+              )}
+
+              <GlossyButton
+                type="submit"
+                variant="orange"
+                size="lg"
+                className="w-full justify-center"
+                disabled={isSendingOtp || isVerifyingOtp || (!isCodeStep && cooldownSeconds > 0)}
+              >
+                {isSendingOtp || isVerifyingOtp ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {isCodeStep ? 'מאמת קוד' : 'שולח קוד'}
+                  </>
+                ) : isCodeStep ? (
+                  'אמת קוד והיכנס'
+                ) : (
+                  'שלח קוד כניסה'
+                )}
+              </GlossyButton>
+
+              {isCodeStep && (
+                <button
+                  type="button"
+                  onClick={() => resetOtpState('existing')}
+                  className="flex min-h-10 w-full items-center justify-center rounded-2xl text-xs font-black text-[#667085] transition-colors hover:text-[#FF6B02]"
+                >
+                  שנה מייל / חזור
+                </button>
+              )}
+            </form>
+          )}
+
+          {authMode === 'register' && (
+            <form onSubmit={isCodeStep ? verifyRegistrationCode : sendRegistrationCode} className="space-y-4">
+              {!isCodeStep && (
+                <>
+                  <label className="block space-y-2">
+                    <span className="block text-xs font-black text-[#344054]">שם מלא</span>
+                    <span className="relative block">
+                      <UserRound className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
+                      <input
+                        type="text"
+                        required
+                        value={fullName}
+                        onChange={(event) => setFullName(event.target.value)}
+                        placeholder="לדוגמה: סג״ם רועי לוי"
+                        className="command-input pr-11"
+                        disabled={isSendingOtp}
+                      />
+                    </span>
+                  </label>
+
+                  <label className="block space-y-2">
+                    <span className="block text-xs font-black text-[#344054]">דוא״ל</span>
+                    <span className="relative block">
+                      <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
+                      <input
+                        type="email"
+                        dir="ltr"
+                        required
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="commander@example.com"
+                        className="command-input pl-11 text-left"
+                        disabled={isSendingOtp}
+                      />
+                    </span>
+                  </label>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block space-y-2">
+                      <span className="block text-xs font-black text-[#344054]">תפקיד מבוקש</span>
+                      <select
+                        value={selectedRole}
+                        onChange={(event) => setSelectedRole(event.target.value)}
+                        className="command-select"
+                        disabled={isSendingOtp}
+                      >
+                        {roleOptions.map((role) => (
+                          <option key={role.name} value={role.name}>
+                            {role.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="block space-y-2">
+                      <span className="block text-xs font-black text-[#344054]">מסגרת / יחידה</span>
+                      <select
+                        value={selectedUnitId}
+                        onChange={(event) => setSelectedUnitId(event.target.value)}
+                        className="command-select"
+                        disabled={isSendingOtp}
+                      >
+                        {unitOptions.map((unit) => (
+                          <option key={unit.id ?? unit.name} value={unit.id ?? 'none'}>
+                            {unit.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {isCodeStep && (
+                <>
+                  <div className="rounded-2xl border border-[rgba(2,1,8,0.08)] bg-white/58 px-4 py-3 text-sm font-bold text-[#667085]">
+                    קוד האימות נשלח אל <span dir="ltr">{registrationDraft?.email}</span>
+                  </div>
+                  <label className="block space-y-2">
+                    <span className="block text-xs font-black text-[#344054]">קוד אימות</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      dir="ltr"
+                      required
+                      value={otpCode}
+                      onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="000000"
+                      className="command-input text-center text-lg font-black tracking-[0.28em]"
+                      disabled={isVerifyingOtp}
+                    />
+                  </label>
+                </>
+              )}
+
+              {message && (
+                <div className="flex items-start gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm leading-relaxed text-emerald-800">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{message}</span>
+                </div>
+              )}
+
+              {error && (
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm leading-relaxed text-red-800">
+                  {error}
+                </div>
+              )}
+
+              {cooldownText && (
+                <div className="rounded-2xl border border-[#FF6B02]/18 bg-[#FF6B02]/10 px-4 py-3 text-center text-xs font-black text-[#9A4600]">
+                  {cooldownText}
+                </div>
+              )}
+
+              <GlossyButton
+                type="submit"
+                variant="orange"
+                size="lg"
+                className="w-full justify-center"
+                disabled={isSendingOtp || isVerifyingOtp || (!isCodeStep && cooldownSeconds > 0)}
+              >
+                {isSendingOtp || isVerifyingOtp ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {isCodeStep ? 'מאמת קוד' : 'שולח קוד'}
+                  </>
+                ) : isCodeStep ? (
+                  'אמת קוד והמשך'
+                ) : (
+                  'שלח קוד אימות'
+                )}
+              </GlossyButton>
+
+              {isCodeStep && (
+                <button
+                  type="button"
+                  onClick={() => resetOtpState('register')}
+                  className="flex min-h-10 w-full items-center justify-center rounded-2xl text-xs font-black text-[#667085] transition-colors hover:text-[#FF6B02]"
+                >
+                  שנה פרטים / חזור
+                </button>
+              )}
+            </form>
+          )}
 
           <div className="mt-6 rounded-2xl border border-[rgba(2,1,8,0.08)] bg-white/58 px-4 py-3 text-center text-xs font-bold text-[#667085]">
-            מצב פיתוח · Supabase Magic Link
+            מצב פיתוח · Supabase Email OTP Code
           </div>
 
           {isDevelopment && (
@@ -229,7 +744,7 @@ export default function LoginPage() {
               <div className="mb-3">
                 <h2 className="text-sm font-black text-[#020108]">כניסת פיתוח זמנית</h2>
                 <p className="mt-1 text-xs font-semibold leading-relaxed text-[#667085]">
-                  מיועד לפיתוח מקומי בלבד, כדי לעקוף זמנית את מגבלת שליחת המיילים.
+                  מיועד לפיתוח מקומי בלבד, כדי להיכנס בלי לשלוח מיילים בזמן מגבלת Supabase.
                 </p>
               </div>
 
@@ -297,9 +812,7 @@ export default function LoginPage() {
               <span>רישום ראשוני</span>
               <ArrowLeft className="h-3.5 w-3.5" />
             </Link>
-            <Link href="/select-role" className="transition-colors hover:text-[#FF6B02]">
-              בחירת תפקיד דמו
-            </Link>
+            <span className="text-[#98A2B3]">אין מידע מבצעי אמיתי במערכת</span>
           </div>
         </GlassCard>
       </div>
