@@ -11,27 +11,25 @@ interface PageHeaderProps {
 export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   subtitle,
-  category = 'מפקדת פלוגה ג׳',
-  actions
+  category = "מפקדת פלוגה ג'",
+  actions,
 }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-900 mb-6">
-      <div>
-        {/* Breadcrumb / Category */}
-        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1.5">
-          <Shield className="w-3.5 h-3.5 text-cyan-500/50" />
+    <div className="mb-6 flex flex-col justify-between gap-4 border-b border-[rgba(2,1,8,0.08)] pb-4 md:flex-row md:items-center">
+      <div className="min-w-0">
+        <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-black text-[#667085]">
+          <Shield className="h-3.5 w-3.5 text-[#FF6B02]" />
           <span>{category}</span>
-          <span>•</span>
-          <span className="text-cyan-400">{title}</span>
+          <span>·</span>
+          <span className="text-[#FF6B02]">{title}</span>
         </div>
-        
-        {/* Title & Subtitle */}
-        <h1 className="text-lg font-black text-slate-100">{title}</h1>
-        <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">{subtitle}</p>
+
+        <h1 className="text-xl font-black text-[#020108]">{title}</h1>
+        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#667085]">{subtitle}</p>
       </div>
 
       {actions && (
-        <div className="flex items-center gap-3 self-end md:self-center">
+        <div className="flex items-center gap-3 self-start md:self-center">
           {actions}
         </div>
       )}

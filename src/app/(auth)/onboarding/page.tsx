@@ -3,137 +3,140 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowRight, ClipboardList, User } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlossyButton } from '@/components/ui/GlossyButton';
-import { Shield, User, ArrowRight, ClipboardList } from 'lucide-react';
-import { RoleType, FrameType } from '@/types';
+
+const roles = ['מ"פ', 'סמ"פ', 'מ"מ', 'מ"כ', 'רס"פ'];
+const frames = [
+  'פלוגה',
+  'מפל"ג',
+  'מחלקה 1',
+  'מחלקה 2',
+  'מחלקה 3',
+  'מחלקה 4',
+  'כיתה 1',
+  'כיתה 2',
+  'כיתה 3',
+  'כיתה 4',
+];
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<RoleType>('מ"מ');
-  const [frame, setFrame] = useState<FrameType>('מחלקה 1');
+  const [role, setRole] = useState(roles[2]);
+  const [frame, setFrame] = useState(frames[2]);
   const [email, setEmail] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // סימולציית רישום מוצלח ומעבר להמתנה לאישור
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     router.push('/pending-approval');
   };
 
-  const roles: RoleType[] = ['מ"פ', 'סמ"פ', 'מ"מ', 'מ"כ', 'רס"פ'];
-  const frames: FrameType[] = [
-    'פלוגה', 'מפל"ג', 
-    'מחלקה 1', 'מחלקה 2', 'מחלקה 3', 'מחלקה 4',
-    'כיתה 1', 'כיתה 2', 'כיתה 3', 'כיתה 4'
-  ];
-
   return (
-    <div className="min-h-screen bg-[#030712] relative flex items-center justify-center p-4 sm:p-6 overflow-hidden">
-      {/* Tactical background elements */}
-      <div className="tactical-overlay" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full filter blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full filter blur-[100px] pointer-events-none" />
-
-      <GlassCard className="w-full max-w-lg bg-slate-950/65 border-slate-900/80 backdrop-blur-2xl z-10 shadow-2xl" glow="orange">
-        {/* Header */}
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="p-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/35 text-orange-500 mb-4 shadow-[0_0_15px_rgba(255,107,2,0.15)]">
-            <ClipboardList className="w-8 h-8" />
+    <main className="command-page-shell flex items-center justify-center p-4 sm:p-6 text-right">
+      <div className="w-full max-w-2xl">
+        <GlassCard glow="orange" className="w-full">
+          <div className="mb-6 flex flex-col items-center text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#FF6B02]/20 bg-[#FF6B02]/10 text-[#FF6B02]">
+              <ClipboardList className="h-7 w-7" />
+            </div>
+            <h1 className="text-xl font-black text-[#020108]">השלמת פרופיל פיקודי</h1>
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-[#667085]">
+              מלא את פרטי הזיהוי הראשוניים כדי להעביר את הפרופיל לאישור מנהל.
+            </p>
           </div>
-          <h1 className="text-lg font-black text-slate-100 tracking-wider">רישום מפקד חדש</h1>
-          <p className="text-xs text-slate-400 mt-1">אנא מלא את פרטיך הצבאיים להגשת בקשת הרשאה פלוגתית</p>
-          <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-orange-500/40 to-transparent mt-3" />
-        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Full Name input */}
-          <div className="space-y-1.5">
-            <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider">שם מלא ודרגה</label>
-            <div className="relative">
-              <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <div className="mb-6 grid grid-cols-3 gap-2 text-center text-xs font-bold text-[#667085]">
+            {['פרטים', 'תפקיד', 'אישור'].map((step, index) => (
+              <div
+                key={step}
+                className="rounded-2xl border border-[rgba(2,1,8,0.08)] bg-white/58 px-3 py-2"
+              >
+                <span className={index === 0 ? 'text-[#FF6B02]' : ''}>{index + 1}. {step}</span>
+              </div>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <label className="block space-y-2">
+              <span className="block text-xs font-black text-[#344054]">שם מלא ודרגה</span>
+              <span className="relative block">
+                <User className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  placeholder='לדוגמה: סג"ם רועי לוי'
+                  className="command-input pr-11"
+                />
+              </span>
+            </label>
+
+            <label className="block space-y-2">
+              <span className="block text-xs font-black text-[#344054]">דוא"ל</span>
               <input
-                type="text"
+                type="email"
                 required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="לדוגמה: סג״ם רועי לוי"
-                className="w-full bg-slate-950/80 border border-slate-800 focus:border-orange-500/60 rounded-xl py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-orange-500/30 transition-all duration-300 text-right"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="example@idf.il"
+                className="command-input"
               />
+            </label>
+
+            <div className="space-y-2">
+              <span className="block text-xs font-black text-[#344054]">תפקיד</span>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                {roles.map((item) => (
+                  <button
+                    type="button"
+                    key={item}
+                    onClick={() => setRole(item)}
+                    className={`min-h-11 rounded-2xl border px-3 text-sm font-black transition-all duration-150 ${
+                      role === item
+                        ? 'border-[#FF6B02]/35 bg-[#FF6B02]/12 text-[#C54F00] shadow-[0_10px_22px_rgba(255,107,2,0.12)]'
+                        : 'border-[rgba(2,1,8,0.10)] bg-white/70 text-[#667085] hover:border-[#FF6B02]/24 hover:bg-[#FF6B02]/8'
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Email input */}
-          <div className="space-y-1.5">
-            <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider">כתובת דואר אלקטרוני</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="example@idf.il"
-              className="w-full bg-slate-950/80 border border-slate-800 focus:border-orange-500/60 rounded-xl py-2 px-4 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-orange-500/30 transition-all duration-300 text-right"
-            />
-          </div>
-
-          {/* Role selection */}
-          <div className="space-y-1.5">
-            <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider">תפקיד פיקודי</label>
-            <div className="grid grid-cols-5 gap-2">
-              {roles.map((r) => (
-                <button
-                  type="button"
-                  key={r}
-                  onClick={() => setRole(r)}
-                  className={`py-2 rounded-xl text-xs font-black cursor-pointer border transition-all duration-300 ${
-                    role === r
-                      ? 'bg-orange-500/10 text-orange-400 border-orange-500/30 shadow-[0_0_10px_rgba(255,107,2,0.1)]'
-                      : 'bg-slate-950/40 text-slate-400 border-slate-900 hover:border-slate-850 hover:bg-slate-900/20'
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Frame selection */}
-          <div className="space-y-1.5">
-            <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider">מסגרת / מחלקה / כיתה מוקצית</label>
-            <div className="relative">
+            <label className="block space-y-2">
+              <span className="block text-xs font-black text-[#344054]">מסגרת / מחלקה / כיתה</span>
               <select
                 value={frame}
-                onChange={(e) => setFrame(e.target.value as FrameType)}
-                className="w-full bg-slate-950 border border-slate-800 focus:border-orange-500/60 rounded-xl py-2 px-4 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-orange-500/30 transition-all duration-300 text-right appearance-none"
+                onChange={(event) => setFrame(event.target.value)}
+                className="command-select"
               >
-                {frames.map((f) => (
-                  <option key={f} value={f} className="bg-slate-950 text-slate-100 text-right">
-                    {f}
+                {frames.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
                   </option>
                 ))}
               </select>
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 text-xs">
-                ▼
-              </div>
+            </label>
+
+            <div className="flex flex-col gap-3 pt-2">
+              <GlossyButton type="submit" variant="orange" size="lg" className="w-full">
+                המשך לאישור
+              </GlossyButton>
+
+              <Link
+                href="/login"
+                className="flex min-h-10 items-center justify-center gap-1.5 rounded-2xl text-xs font-black text-[#667085] transition-colors hover:text-[#FF6B02]"
+              >
+                <ArrowRight className="h-3.5 w-3.5" />
+                <span>חזרה למסך הכניסה</span>
+              </Link>
             </div>
-          </div>
-
-          {/* Actions */}
-          <div className="pt-4 flex flex-col gap-3">
-            <GlossyButton type="submit" variant="orange" size="lg" className="w-full justify-center">
-              הגשת בקשת הצטרפות למפקד
-            </GlossyButton>
-
-            <Link
-              href="/login"
-              className="flex items-center justify-center gap-1.5 py-2 text-[10px] text-slate-500 hover:text-slate-300 font-black tracking-wider transition-colors"
-            >
-              <ArrowRight className="w-3.5 h-3.5" />
-              <span>חזרה למסך התחברות</span>
-            </Link>
-          </div>
-        </form>
-      </GlassCard>
-    </div>
+          </form>
+        </GlassCard>
+      </div>
+    </main>
   );
 }

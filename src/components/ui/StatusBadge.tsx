@@ -1,12 +1,27 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export type BadgeStatusType = 
-  | 'חדשה' | 'לביצוע' | 'בתהליך' | 'ממתין לאישור' | 'הושלם' | 'תקוע'
-  | 'פתוח' | 'נסגר' | 'בטיפול' | 'נפתחה' | 'סופק' | 'approved' | 'pending' | 'rejected';
+export type BadgeStatusType =
+  | 'חדש'
+  | 'דחוף'
+  | 'קריטי'
+  | 'בתהליך'
+  | 'ממתין לאישור'
+  | 'הושלם'
+  | 'תקוע'
+  | 'בוטל'
+  | 'פתוח'
+  | 'נסגר'
+  | 'בטיפול'
+  | 'נפתחה'
+  | 'סופק'
+  | 'approved'
+  | 'pending'
+  | 'rejected'
+  | string;
 
 interface StatusBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  status: BadgeStatusType | string;
+  status: BadgeStatusType;
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({
@@ -14,60 +29,57 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   className,
   ...props
 }) => {
-  const getStatusStyles = () => {
-    switch (status) {
-      case 'הושלם':
-      case 'סופק':
-      case 'נסגר':
-      case 'approved':
-        return 'bg-[#00f5d4]/10 text-[#00f5d4] border-[#00f5d4]/20';
-      case 'בתהליך':
-      case 'בטיפול':
-        return 'bg-[#00bbf9]/10 text-[#00bbf9] border-[#00bbf9]/20';
-      case 'חדשה':
-      case 'לביצוע':
-      case 'נפתחה':
-        return 'bg-slate-800 text-slate-300 border-slate-700/50';
-      case 'ממתין לאישור':
-      case 'pending':
-        return 'bg-[#fee440]/10 text-[#fee440] border-[#fee440]/20 animate-pulse';
-      case 'תקוע':
-      case 'rejected':
-        return 'bg-[#ff0054]/10 text-[#ff0054] border-[#ff0054]/20 font-black';
-      default:
-        return 'bg-slate-800 text-slate-400 border-slate-700';
-    }
-  };
-
-  const getStatusLabel = () => {
-    switch (status) {
-      case 'הושלם': return 'הושלם';
-      case 'סופק': return 'סופק';
-      case 'נסגר': return 'נסגר';
-      case 'approved': return 'מאושר';
-      case 'בתהליך': return 'בתהליך';
-      case 'בטיפול': return 'בטיפול';
-      case 'חדשה': return 'חדשה';
-      case 'לביצוע': return 'לביצוע';
-      case 'נפתחה': return 'נפתחה';
-      case 'ממתין לאישור': return 'ממתין לאישור';
-      case 'pending': return 'ממתין לאישור';
-      case 'תקוע': return 'תקוע';
-      case 'rejected': return 'נדחה';
-      default: return status;
-    }
-  };
+  const normalizedStatus = normalizeStatus(status);
 
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold border tracking-wider",
-        getStatusStyles(),
+        'inline-flex min-h-6 items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold',
+        getStatusStyles(normalizedStatus),
         className
       )}
       {...props}
     >
-      {getStatusLabel()}
+      {normalizedStatus}
     </span>
   );
 };
+
+function normalizeStatus(status: string) {
+  switch (status) {
+    case 'approved':
+      return 'הושלם';
+    case 'pending':
+      return 'ממתין לאישור';
+    case 'rejected':
+      return 'בוטל';
+    default:
+      return status;
+  }
+}
+
+function getStatusStyles(status: string) {
+  switch (status) {
+    case 'הושלם':
+    case 'סופק':
+    case 'נסגר':
+      return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20';
+    case 'בתהליך':
+    case 'בטיפול':
+      return 'bg-blue-500/10 text-blue-700 border-blue-500/20';
+    case 'חדש':
+    case 'פתוח':
+    case 'נפתחה':
+      return 'bg-slate-500/10 text-slate-700 border-slate-500/20';
+    case 'ממתין לאישור':
+      return 'bg-[#FF6B02]/10 text-[#C54F00] border-[#FF6B02]/25';
+    case 'דחוף':
+    case 'קריטי':
+    case 'תקוע':
+      return 'bg-red-500/10 text-red-700 border-red-500/20';
+    case 'בוטל':
+      return 'bg-zinc-500/10 text-zinc-700 border-zinc-500/20';
+    default:
+      return 'bg-slate-500/10 text-slate-700 border-slate-500/20';
+  }
+}

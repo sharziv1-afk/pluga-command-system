@@ -2,46 +2,76 @@
 @import "tailwindcss";
 
 @theme {
-  --color-tactical-bg: #f8fafc;
-  --color-tactical-card: rgba(255, 255, 255, 0.78);
-  --color-tactical-card-hover: rgba(255, 255, 255, 0.92);
-  --color-tactical-border: rgba(15, 23, 42, 0.1);
-  --color-tactical-border-hover: rgba(8, 145, 178, 0.3);
-  --color-accent-orange: #f97316;
-  --color-accent-cyan: #0891b2;
-  --color-status-success: #059669;
-  --color-status-stuck: #ca8a04;
-  --color-status-danger: #e11d48;
-  --color-status-info: #0284c7;
+  --color-command-bg: #f6f7f9;
+  --color-command-bg-secondary: #eef1f5;
+  --color-command-text: #020108;
+  --color-command-muted: #667085;
+  --color-command-subtle: #98a2b3;
+  --color-command-orange: #ff6b02;
+  --color-command-orange-soft: rgba(255, 107, 2, 0.12);
+  --color-command-border: rgba(2, 1, 8, 0.1);
+  --color-tactical-bg: #f6f7f9;
+  --color-tactical-card: rgba(255, 255, 255, 0.72);
+  --color-tactical-card-hover: rgba(255, 255, 255, 0.88);
+  --color-tactical-border: rgba(2, 1, 8, 0.1);
+  --color-tactical-border-hover: rgba(255, 107, 2, 0.28);
+  --color-accent-orange: #ff6b02;
+  --color-accent-cyan: #0f766e;
+  --color-status-success: #079455;
+  --color-status-stuck: #d92d20;
+  --color-status-danger: #d92d20;
+  --color-status-info: #1570ef;
 }
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f6f7f9;
+  --foreground: #020108;
   
   --tactical-dark: #ffffff;
-  --tactical-glass: rgba(255, 255, 255, 0.78);
-  --tactical-border: rgba(15, 23, 42, 0.1);
-  --tactical-border-hover: rgba(8, 145, 178, 0.3);
+  --tactical-glass: rgba(255, 255, 255, 0.72);
+  --tactical-strong-glass: rgba(255, 255, 255, 0.88);
+  --tactical-border: rgba(2, 1, 8, 0.1);
+  --tactical-border-hover: rgba(255, 107, 2, 0.28);
   
-  --accent-orange: #f97316;
-  --accent-cyan: #0891b2;
+  --accent-orange: #ff6b02;
+  --accent-cyan: #0f766e;
+  --command-muted: #667085;
+  --command-subtle: #98a2b3;
+  --orange-soft: rgba(255, 107, 2, 0.12);
+  --orange-border: rgba(255, 107, 2, 0.28);
   
-  --status-success: #059669;
-  --status-stuck: #ca8a04;
-  --status-danger: #e11d48;
-  --status-info: #0284c7;
+  --status-success: #079455;
+  --status-stuck: #d92d20;
+  --status-danger: #d92d20;
+  --status-info: #1570ef;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+  color: var(--foreground);
 }
 
 body {
   background:
-    linear-gradient(135deg, rgba(8, 145, 178, 0.08), transparent 32%),
-    linear-gradient(315deg, rgba(249, 115, 22, 0.08), transparent 30%),
-    var(--background);
+    radial-gradient(circle at top right, rgba(255,107,2,0.14), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(2,1,8,0.06), transparent 32%),
+    #F6F7F9;
   color: var(--foreground);
   font-family: 'Rubik', 'Inter', system-ui, -apple-system, sans-serif;
   direction: rtl;
   overflow-x: hidden;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
 }
 
 .protected-layout-shell {
@@ -76,47 +106,48 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(226, 232, 240, 0.8);
+  background: rgba(238, 241, 245, 0.9);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(8, 145, 178, 0.28);
+  background: rgba(255, 107, 2, 0.26);
   border-radius: 9999px;
-  transition: all 0.3s ease;
+  transition: all 160ms ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-cyan);
-  box-shadow: 0 0 8px rgba(8, 145, 178, 0.28);
+  box-shadow: 0 0 8px rgba(255, 107, 2, 0.24);
 }
 
 /* Glassmorphism Card Style */
 .tactical-glass-card {
   background: var(--tactical-glass);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
   border: 1px solid var(--tactical-border);
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 18px 50px rgba(2, 1, 8, 0.08);
+  border-radius: 24px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, background-color 160ms ease;
 }
 
 .tactical-glass-card:hover {
   border-color: var(--tactical-border-hover);
-  box-shadow: 0 22px 55px rgba(8, 145, 178, 0.12);
-  transform: translateY(-2px);
+  box-shadow: 0 22px 60px rgba(2, 1, 8, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Glowing Border for simulations or active elements */
 .tactical-glow-cyan {
-  border-color: var(--accent-cyan);
-  background: linear-gradient(135deg, rgba(8, 145, 178, 0.12), rgba(255, 255, 255, 0.86));
-  box-shadow: 0 18px 45px rgba(8, 145, 178, 0.14);
+  border-color: rgba(15, 118, 110, 0.22);
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(255, 255, 255, 0.86));
+  box-shadow: 0 18px 50px rgba(2, 1, 8, 0.08);
 }
 
 .tactical-glow-orange {
-  border-color: var(--accent-orange);
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.13), rgba(255, 255, 255, 0.86));
-  box-shadow: 0 18px 45px rgba(249, 115, 22, 0.14);
+  border-color: rgba(255, 107, 2, 0.28);
+  background: linear-gradient(135deg, rgba(255, 107, 2, 0.12), rgba(255, 255, 255, 0.88));
+  box-shadow: 0 22px 60px rgba(2, 1, 8, 0.1);
 }
 
 /* Glossy Highlights Sweep Animation */
@@ -139,7 +170,7 @@ body {
     rgba(255, 255, 255, 0) 100%
   );
   transform: skewX(-25deg);
-  transition: 0.75s;
+  transition: 180ms ease;
 }
 
 .tactical-gloss-highlight:hover::before {
@@ -149,13 +180,14 @@ body {
 /* Scanline and Tactical Overlay Effects */
 .tactical-overlay {
   background:
-    linear-gradient(rgba(15, 23, 42, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 23, 42, 0.025) 1px, transparent 1px);
+    linear-gradient(rgba(2, 1, 8, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(2, 1, 8, 0.025) 1px, transparent 1px);
   background-size: 32px 32px;
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: -1;
+  opacity: 0.32;
 }
 
 .tactical-overlay::after {
@@ -163,11 +195,72 @@ body {
   display: block;
   position: absolute;
   top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(90deg, rgba(8, 145, 178, 0.04), rgba(249, 115, 22, 0.03), rgba(15, 23, 42, 0.02));
+  background: linear-gradient(90deg, rgba(255, 107, 2, 0.03), rgba(255, 255, 255, 0.02), rgba(2, 1, 8, 0.02));
   z-index: 2;
   background-size: 100% 100%;
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.45;
+}
+
+.command-page-shell {
+  min-height: 100vh;
+  min-height: 100svh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(255,107,2,0.14), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(2,1,8,0.06), transparent 32%),
+    #F6F7F9;
+  color: #020108;
+}
+
+.command-container {
+  width: min(100%, 1120px);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 2rem);
+}
+
+.command-input {
+  min-height: 48px;
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(2, 1, 8, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  color: #020108;
+  padding: 0.75rem 1rem;
+  text-align: right;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.command-input::placeholder {
+  color: #98A2B3;
+}
+
+.command-input:focus {
+  border-color: rgba(255, 107, 2, 0.42) !important;
+  box-shadow: 0 0 0 4px rgba(255, 107, 2, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.command-select {
+  min-height: 48px;
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(2, 1, 8, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  color: #020108;
+  padding: 0.75rem 1rem;
+  text-align: right;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.command-select:focus {
+  border-color: rgba(255, 107, 2, 0.42) !important;
+  box-shadow: 0 0 0 4px rgba(255, 107, 2, 0.12);
 }
 
 /* Utility Animations */
@@ -184,7 +277,7 @@ body {
 [class*="bg-[#030712]"],
 [class*="bg-slate-950"],
 [class*="bg-slate-900"] {
-  background-color: rgba(255, 255, 255, 0.78) !important;
+  background-color: rgba(255, 255, 255, 0.72) !important;
 }
 
 [class*="bg-slate-850"],
@@ -196,32 +289,32 @@ body {
 [class*="border-slate-900"],
 [class*="border-slate-800"],
 [class*="border-slate-700"] {
-  border-color: rgba(15, 23, 42, 0.1) !important;
+  border-color: rgba(2, 1, 8, 0.1) !important;
 }
 
 [class*="text-slate-100"],
 [class*="text-slate-200"],
 [class*="text-slate-300"] {
-  color: #0f172a !important;
+  color: #020108 !important;
 }
 
 [class*="text-slate-400"],
 [class*="text-slate-450"],
 [class*="text-slate-500"],
 [class*="text-slate-600"] {
-  color: #475569 !important;
+  color: #667085 !important;
 }
 
 [class*="placeholder-slate-600"]::placeholder {
-  color: #94a3b8 !important;
+  color: #98A2B3 !important;
 }
 
 input,
 select,
 textarea {
   background-color: rgba(255, 255, 255, 0.92) !important;
-  border-color: rgba(15, 23, 42, 0.12) !important;
-  color: #0f172a !important;
+  border-color: rgba(2, 1, 8, 0.1) !important;
+  color: #020108 !important;
 }
 
 option {
@@ -230,34 +323,36 @@ option {
 }
 
 [class*="shadow-[0_0_"] {
-  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 14px 36px rgba(2, 1, 8, 0.08) !important;
 }
 
 .auth-navy-shell {
   background:
-    linear-gradient(135deg, #020617 0%, #0f172a 42%, #10233d 100%) !important;
-  color: #f8fafc !important;
+    radial-gradient(circle at top right, rgba(255,107,2,0.14), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(2,1,8,0.06), transparent 32%),
+    #F6F7F9 !important;
+  color: #020108 !important;
 }
 
 .auth-dark-card {
-  background: rgba(2, 6, 23, 0.72) !important;
-  border-color: rgba(148, 163, 184, 0.2) !important;
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.34) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(255, 107, 2, 0.16) !important;
+  box-shadow: 0 22px 60px rgba(2, 1, 8, 0.1) !important;
 }
 
 .auth-dark-card h1,
 .auth-dark-card p,
 .auth-dark-card span,
 .auth-dark-card label {
-  color: inherit;
+  color: #020108;
 }
 
 .auth-dark-input {
-  background-color: rgba(15, 23, 42, 0.82) !important;
-  border: 1px solid rgba(148, 163, 184, 0.22) !important;
-  color: #f8fafc !important;
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(2, 1, 8, 0.1) !important;
+  color: #020108 !important;
 }
 
 .auth-dark-input::placeholder {
-  color: #64748b !important;
+  color: #98A2B3 !important;
 }

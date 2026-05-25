@@ -3,72 +3,73 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LogOut, Shield, User } from 'lucide-react';
 import { navigationItems } from '@/data/navigation';
-import { Shield, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const AppSidebar: React.FC = () => {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 bg-slate-950/80 border-e border-slate-900/60 backdrop-blur-xl fixed inset-y-0 right-0 z-30 select-none text-right">
-      {/* 🚀 Brand Cockpit Header */}
-      <div className="flex items-center gap-2.5 p-6 border-b border-slate-900">
-        <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/35 text-cyan-400">
-          <Shield className="w-5 h-5 animate-pulse" />
-        </div>
-        <div>
-          <h1 className="text-sm font-black text-slate-100 uppercase tracking-wider">המפקד</h1>
-          <p className="text-[10px] text-cyan-500 font-bold uppercase tracking-widest mt-0.5">סייבר פיקוד פלוגתי</p>
+    <aside className="hidden lg:flex fixed inset-y-0 right-0 z-30 w-64 select-none flex-col border-e border-[rgba(2,1,8,0.10)] bg-white/72 text-right shadow-[0_18px_50px_rgba(2,1,8,0.08)] backdrop-blur-2xl">
+      <div className="border-b border-[rgba(2,1,8,0.08)] p-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#FF6B02]/22 bg-[#FF6B02]/10 text-[#FF6B02]">
+            <Shield className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-base font-black text-[#020108]">המפקד</h1>
+            <p className="mt-0.5 text-[11px] font-bold text-[#667085]">ניהול פיקודי לפלוגה</p>
+          </div>
         </div>
       </div>
 
-      {/* 📋 Sidebar Links */}
-      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 space-y-1.5 overflow-y-auto px-3 py-5 custom-scrollbar">
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.path || (pathname === '/' && item.path === '/dashboard');
-          
+
           return (
             <Link
               key={item.path}
               href={item.path}
               className={cn(
-                "flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 border border-transparent group",
-                isActive 
-                  ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20 shadow-[0_0_12px_rgba(0,229,255,0.06)]"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 hover:border-slate-900"
+                'group flex min-h-11 items-center gap-3 rounded-2xl border px-3 text-sm font-bold transition-all duration-150',
+                isActive
+                  ? 'border-[#FF6B02]/24 bg-[#FF6B02]/12 text-[#C54F00] shadow-[0_10px_24px_rgba(255,107,2,0.10)]'
+                  : 'border-transparent text-[#667085] hover:border-[rgba(2,1,8,0.08)] hover:bg-white/72 hover:text-[#020108]'
               )}
             >
-              <Icon className={cn(
-                "w-4 h-4 transition-all duration-300",
-                isActive ? "text-cyan-400 animate-pulse" : "text-slate-500 group-hover:text-cyan-500/70"
-              )} />
+              <Icon
+                className={cn(
+                  'h-4 w-4 transition-colors duration-150',
+                  isActive ? 'text-[#FF6B02]' : 'text-[#98A2B3] group-hover:text-[#FF6B02]'
+                )}
+              />
               <span>{item.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* 👤 Commander Info Section */}
-      <div className="p-4 border-t border-slate-900 bg-slate-950/40">
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/30 border border-slate-900">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center text-slate-400 border border-slate-800">
-              <User className="w-4 h-4" />
+      <div className="border-t border-[rgba(2,1,8,0.08)] p-4">
+        <div className="flex items-center justify-between rounded-2xl border border-[rgba(2,1,8,0.08)] bg-white/70 p-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[rgba(2,1,8,0.08)] bg-[#EEF1F5] text-[#667085]">
+              <User className="h-4 w-4" />
             </div>
-            <div>
-              <span className="block text-[10px] font-black text-slate-200">סרן אלון כהן</span>
-              <span className="block text-[9px] text-slate-500">מפקד פלוגה ג׳</span>
+            <div className="min-w-0">
+              <span className="block truncate text-xs font-black text-[#020108]">משתמש דמו</span>
+              <span className="block truncate text-[11px] text-[#667085]">פלוגה ג'</span>
             </div>
           </div>
-          
+
           <Link
             href="/login"
             title="התנתק"
-            className="p-1 hover:bg-slate-900 rounded-lg text-slate-500 hover:text-[#ff0054] transition-all cursor-pointer"
+            className="rounded-xl p-2 text-[#98A2B3] transition-all hover:bg-red-500/10 hover:text-red-700"
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="h-4 w-4" />
           </Link>
         </div>
       </div>

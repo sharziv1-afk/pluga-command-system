@@ -19,18 +19,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   onAction
 }) => {
   return (
-    <GlassCard className="flex flex-col items-center justify-center text-center py-16 px-6 max-w-lg mx-auto border-dashed border-slate-800/80 bg-slate-950/20">
-      <div className="p-4 rounded-full bg-slate-900/60 border border-slate-800 text-slate-500 mb-4 animate-pulse-soft">
+    <GlassCard className="flex flex-col items-center justify-center text-center py-14 px-6 max-w-lg mx-auto border-dashed border-[rgba(2,1,8,0.12)] bg-white/70">
+      <div className="p-4 rounded-2xl bg-[#FF6B02]/10 border border-[#FF6B02]/20 text-[#FF6B02] mb-4">
         <Icon className="w-10 h-10" />
       </div>
       
-      <h3 className="text-sm font-black text-slate-200 mb-2">{title}</h3>
-      <p className="text-xs text-slate-400 leading-relaxed mb-6 max-w-sm">
+      <h3 className="text-base font-black text-[#020108] mb-2">{title}</h3>
+      <p className="text-sm text-[#667085] leading-relaxed mb-6 max-w-sm">
         {description}
       </p>
       
       {actionText && onAction && (
-        <GlossyButton variant="cyan" onClick={onAction}>
+        <GlossyButton variant="orange" onClick={onAction}>
           {actionText}
         </GlossyButton>
       )}

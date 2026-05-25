@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Mail, Shield } from 'lucide-react';
+import { ArrowLeft, Loader2, Mail, ShieldCheck } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlossyButton } from '@/components/ui/GlossyButton';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
@@ -45,15 +45,15 @@ export default function LoginPage() {
           setError(
             devDetails
               ? `לא הצלחנו לשלוח קישור כניסה. שגיאת Supabase: ${devDetails}`
-              : 'לא הצלחנו לשלוח קישור כניסה. Supabase החזיר שגיאה ללא הודעה מפורטת.'
+              : 'לא הצלחנו לשלוח קישור כניסה. Supabase החזיר שגיאה ללא פירוט.'
           );
           return;
         }
-        setError('לא הצלחנו לשלוח קישור כניסה. בדוק את כתובת הדוא״ל ונסה שוב.');
+        setError('לא הצלחנו לשלוח קישור כניסה. בדוק את כתובת הדוא"ל ונסה שוב.');
         return;
       }
 
-      setMessage('שלחנו אליך קישור כניסה מאובטח. פתח את המייל ואשר כניסה למערכת.');
+      setMessage('שלחנו אליך קישור כניסה מאובטח. פתח את הדוא"ל ואשר כניסה למערכת.');
     } catch (unknownError) {
       if (isDevelopment) {
         console.error('Unexpected login error:', unknownError);
@@ -62,7 +62,7 @@ export default function LoginPage() {
         setError(
           devMessage
             ? `אירעה שגיאה בחיבור למערכת ההזדהות. שגיאת development: ${devMessage}`
-            : 'אירעה שגיאה בחיבור למערכת ההזדהות. שגיאת development ללא הודעה מפורטת.'
+            : 'אירעה שגיאה בחיבור למערכת ההזדהות. שגיאת development ללא פירוט.'
         );
         return;
       }
@@ -73,82 +73,88 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-navy-shell min-h-screen relative flex items-center justify-center p-4 sm:p-6 overflow-hidden text-right">
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_30%_20%,rgba(8,145,178,0.26),transparent_34%),radial-gradient(circle_at_75%_80%,rgba(249,115,22,0.18),transparent_30%)]" />
+    <main className="command-page-shell relative flex items-center justify-center p-4 sm:p-6 text-right">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,107,2,0.16),transparent_30%),radial-gradient(circle_at_20%_82%,rgba(2,1,8,0.06),transparent_34%)]" />
 
-      <GlassCard className="auth-dark-card w-full max-w-md backdrop-blur-2xl z-10 shadow-2xl" glow="cyan">
-        <div className="flex flex-col items-center text-center mb-7">
-          <div className="p-3.5 rounded-2xl bg-cyan-400/10 border border-cyan-300/35 text-cyan-200 mb-4 shadow-[0_0_24px_rgba(103,232,249,0.22)]">
-            <Shield className="w-8 h-8" />
+      <div className="relative z-10 w-full max-w-md">
+        <div className="mb-5 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#FF6B02]/20 bg-[#FF6B02]/10 text-[#FF6B02] shadow-[0_14px_30px_rgba(255,107,2,0.14)]">
+            <ShieldCheck className="h-6 w-6" />
           </div>
-          <h1 className="text-xl font-black text-white tracking-wider">המפקד</h1>
-          <p className="text-xs text-cyan-100/80 font-bold mt-1">
-            כניסה מאובטחת למערכת פיקוד פלוגתית
-          </p>
-          <p className="text-[11px] text-slate-300 mt-4 leading-relaxed max-w-xs">
-            הזן כתובת דוא״ל, ונשלח אליך קישור חד-פעמי לכניסה. לאחר האימות נבדוק את סטטוס האונבורדינג וההרשאה שלך.
-          </p>
+          <p className="text-2xl font-black text-[#020108]">המפקד</p>
+          <p className="mt-1 text-sm font-semibold text-[#667085]">מערכת ניהול פיקודית לפלוגה</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="block text-[10px] font-black uppercase text-slate-300 tracking-wider">
-              דואר אלקטרוני
+        <GlassCard glow="orange" className="auth-dark-card w-full">
+          <div className="mb-6 text-center">
+            <h1 className="text-xl font-black text-[#020108]">כניסה למערכת</h1>
+            <p className="mt-2 text-sm leading-relaxed text-[#667085]">
+              הזן דוא"ל כדי לקבל קישור כניסה מאובטח
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <label className="block space-y-2">
+              <span className="block text-xs font-black text-[#344054]">דוא"ל</span>
+              <span className="relative block">
+                <Mail className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="commander@example.com"
+                  className="command-input pr-11"
+                  disabled={isSubmitting}
+                />
+              </span>
             </label>
-            <div className="relative">
-              <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="commander@example.com"
-                className="auth-dark-input w-full rounded-xl py-2.5 pr-10 pl-4 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-300/40 transition-all duration-300 text-right"
-                disabled={isSubmitting}
-              />
-            </div>
+
+            {message && (
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm leading-relaxed text-emerald-800">
+                {message}
+              </div>
+            )}
+
+            {error && (
+              <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm leading-relaxed text-red-800">
+                {error}
+              </div>
+            )}
+
+            <GlossyButton
+              type="submit"
+              variant="orange"
+              size="lg"
+              className="w-full justify-center"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  שולח קישור כניסה
+                </>
+              ) : (
+                'קבל קישור כניסה'
+              )}
+            </GlossyButton>
+          </form>
+
+          <div className="mt-6 rounded-2xl border border-[rgba(2,1,8,0.08)] bg-white/58 px-4 py-3 text-center text-xs font-bold text-[#667085]">
+            מצב פיתוח · Supabase Magic Link
           </div>
 
-          {message && (
-            <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-4 py-3 text-[11px] leading-relaxed text-emerald-100">
-              {message}
-            </div>
-          )}
-
-          {error && (
-            <div className="rounded-xl border border-rose-300/25 bg-rose-300/10 px-4 py-3 text-[11px] leading-relaxed text-rose-100">
-              {error}
-            </div>
-          )}
-
-          <GlossyButton
-            type="submit"
-            variant="cyan"
-            size="lg"
-            className="w-full justify-center"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                שולח קישור כניסה
-              </>
-            ) : (
-              'שלח קישור כניסה'
-            )}
-          </GlossyButton>
-        </form>
-
-        <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-slate-300 font-bold">
-          <Link href="/onboarding" className="hover:text-cyan-200 transition-colors flex items-center gap-1 group">
-            <span>רישום מפקד חדש</span>
-            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
-          </Link>
-          <Link href="/select-role" className="hover:text-orange-200 transition-colors">
-            הדמיית תפקידים
-          </Link>
-        </div>
-      </GlassCard>
-    </div>
+          <div className="mt-5 flex flex-col items-center justify-between gap-3 border-t border-[rgba(2,1,8,0.08)] pt-5 text-xs font-bold text-[#667085] sm:flex-row">
+            <Link href="/onboarding" className="flex items-center gap-1 transition-colors hover:text-[#FF6B02]">
+              <span>רישום ראשוני</span>
+              <ArrowLeft className="h-3.5 w-3.5" />
+            </Link>
+            <Link href="/select-role" className="transition-colors hover:text-[#FF6B02]">
+              בחירת תפקיד דמו
+            </Link>
+          </div>
+        </GlassCard>
+      </div>
+    </main>
   );
 }

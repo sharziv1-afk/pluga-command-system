@@ -1,36 +1,41 @@
-import { 
-  LayoutDashboard, CheckSquare, Truck, MessageSquare, Shield, HelpCircle 
+import {
+  CheckSquare,
+  HelpCircle,
+  LayoutDashboard,
+  MessageSquare,
+  Shield,
+  Truck,
 } from 'lucide-react';
 
 export const navigationItems = [
   {
     name: 'לוח בקרה',
     path: '/dashboard',
-    icon: LayoutDashboard
+    icon: LayoutDashboard,
   },
   {
     name: 'משימות ובקרה',
     path: '/tasks',
-    icon: CheckSquare
+    icon: CheckSquare,
   },
   {
     name: 'דרישות לוגיסטיקה',
     path: '/requests',
-    icon: Truck
+    icon: Truck,
   },
   {
     name: 'פורום מוביל',
     path: '/forum',
-    icon: MessageSquare
+    icon: MessageSquare,
   },
   {
     name: 'אישור משתמשים',
     path: '/admin',
-    icon: Shield
+    icon: Shield,
   },
   {
     name: 'עזרה ומדריך',
     path: '/help',
-    icon: HelpCircle
-  }
+    icon: HelpCircle,
+  },
 ];
