@@ -83,6 +83,7 @@ Current project state:
 - The schema file exists and is kept in Git.
 - The seed file exists and is kept in Git.
 - The schema and seed were already run manually in Supabase.
+- Commander RLS policies for reading/managing user profiles were run manually in Supabase and verified with an approved + active commander.
 - Do not change schema, RLS, triggers, seed, or database structure during design-only work.
 
 ## Auth Status
@@ -143,6 +144,15 @@ Manual verification still needed:
 - New user redirects to `/onboarding`
 - Pending user redirects to `/pending-approval`
 - Approved active user reaches `/dashboard`
+
+Latest manual verification:
+
+- Approved + active מ״פ can log in.
+- The מ״פ sees the role-appropriate commander dashboard.
+- Admin Panel navigation appears for the מ״פ.
+- The personal profile page exists.
+- Sidebar and mobile header show the connected user and role.
+- Basic role-based interface behavior is working.
 
 ## Design System
 
@@ -206,18 +216,17 @@ Protected routes:
 - `/requests`
 - `/forum`
 - `/admin`
+- `/profile`
 - `/help`
 
 Protected route checks are handled by `src/proxy.ts`.
 
 ## Next Safe Steps
 
-1. Finish visual QA on `/login`, `/onboarding`, `/select-role`, `/pending-approval`, and `/dashboard`.
-2. Re-test at mobile width `390x844`.
-3. Configure the Supabase Email Template to include `{{ .Token }}`.
-4. After Supabase rate limit ends, send one OTP email manually from `/login`.
-5. Verify `public.users` profile creation and redirects.
-6. Only after OTP and fallback callback behavior are verified, continue onboarding/admin/product logic work.
+1. Build the basic requests/requirements module.
+2. Keep it scoped: there is still no complete requests/requirements module connected to real data.
+3. Preserve the verified role-based interface, commander Admin Panel visibility, and Supabase RLS assumptions.
+4. Re-run `npm run lint`, `npx tsc -p tsconfig.json --noEmit`, and `npm run build` after changes.
 
 ## Guardrails
 

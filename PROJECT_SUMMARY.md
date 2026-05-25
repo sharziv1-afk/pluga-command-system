@@ -17,7 +17,7 @@ The project currently uses:
 
 The schema and seed were already run manually in Supabase. The seed file is kept in Git at `supabase/migrations/seed_units_roles.sql`.
 
-RLS policies for `public.users` were added manually in Supabase after profile creation failed. `public.users` was empty before those policies were added.
+RLS policies for `public.users` were added manually in Supabase after profile creation failed. `public.users` was empty before those policies were added. Commander RLS policies for reading/managing user profiles were also run manually in Supabase and verified.
 
 ## What Has Been Done
 
@@ -31,8 +31,20 @@ RLS policies for `public.users` were added manually in Supabase after profile cr
 - Schema file exists.
 - Units/roles seed file exists.
 - The app has a protected layout with sidebar/mobile header.
+- Role-based interface is working at a basic level: approved active commanders see commander dashboard content, Admin Panel navigation, and real user/role identity in the sidebar/header.
+- Personal profile page exists and displays the connected user and role.
 - Core UI components exist: `GlassCard`, `GlossyButton`, `StatusBadge`, `EmptyState`.
 - The current UI pass introduced the **Light Gloss Command System**.
+
+## Latest Manual Verification
+
+Manual testing passed after the commander RLS policies were applied in Supabase:
+
+- An approved + active מ״פ can log in.
+- The מ״פ sees the role-appropriate commander dashboard.
+- The Admin Panel appears for the מ״פ.
+- The personal profile page exists.
+- Sidebar and mobile header show the connected user and role.
 
 ## Latest Design Change
 
@@ -108,4 +120,6 @@ npx tsc -p tsconfig.json --noEmit
 npm run build
 ```
 
-Then wait for the Supabase rate limit, verify registration OTP and profile creation, and confirm existing user login with email + password.
+Then continue with the next recommended product step: a basic requests/requirements module.
+
+Important: there is still no complete requests/requirements module connected to real data.

@@ -48,6 +48,7 @@ Current known state:
 - Seed file exists and is kept in Git.
 - The schema and seed were already run manually in Supabase.
 - RLS policies for `public.users` were added manually in Supabase after profile creation failed.
+- Commander RLS policies for reading/managing user profiles were also run manually in Supabase and verified in the live project.
 - `public.users` was empty before the manual RLS policy update.
 - Do not change schema, seed, RLS, triggers, or database structure during design-only work.
 
@@ -73,6 +74,8 @@ Current auth status:
 - Protected route proxy exists.
 - Email OTP still requires live verification for new registrations because Supabase reached the email rate limit again.
 - Development-only Dev Login with email/password credentials remains in `/login` for local work and must not be exposed in production.
+- Manual verification passed for an approved + active company commander profile: the commander can log in, sees the commander dashboard, sees the Admin Panel, and the sidebar/header show the real user and role.
+- The basic role-based interface is working: dashboard content, navigation/admin visibility, profile page, and header/sidebar identity respond to the active approved profile.
 
 Known issue:
 
@@ -99,6 +102,14 @@ Still requires manual verification:
 - Pending users redirect to `/pending-approval`.
 - Approved active users redirect to `/dashboard`.
 - Magic Link callback fallback still reaches `/auth/callback` if used.
+
+Recently verified manually:
+
+- Commander RLS policies in Supabase allow an approved + active commander to access the Admin Panel.
+- Approved + active מ״פ sees the role-appropriate dashboard.
+- Admin Panel appears for מ״פ.
+- Personal profile page exists and renders user/role data.
+- Sidebar and mobile header show the connected user identity and role.
 
 ## Demo Layer Warning
 
@@ -233,6 +244,7 @@ Protected:
 - `/forum`
 - `/admin`
 - `/help`
+- `/profile`
 
 ## Validation Checklist
 
@@ -273,7 +285,9 @@ Check:
 6. Confirm that a row is created in `public.users` after `verifyOtp`.
 7. Confirm redirect to `/onboarding`.
 8. If profile creation still fails, read the development terminal log for `Registration profile upsert failed` and inspect `message`, `code`, `details`, and `hint`.
-9. Only then continue onboarding/admin approval/product logic.
+9. Next recommended product step: build the basic requests/requirements module.
+10. There is still no complete requests/requirements module connected to real data.
+11. Only then continue broader product logic.
 
 ## Guardrails For Future Agents
 
