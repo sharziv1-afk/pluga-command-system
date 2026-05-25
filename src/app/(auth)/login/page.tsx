@@ -527,12 +527,12 @@ export default function LoginPage() {
                   <input
                     type="text"
                     inputMode="numeric"
-                    maxLength={6}
+                    maxLength={8}
                     dir="ltr"
                     required
                     value={otpCode}
-                    onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="000000"
+                    onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 8))}
+                    placeholder="12345678"
                     className="command-input text-center text-lg font-black tracking-[0.28em]"
                     disabled={isVerifyingOtp}
                   />
@@ -672,12 +672,12 @@ export default function LoginPage() {
                     <input
                       type="text"
                       inputMode="numeric"
-                      maxLength={6}
+                      maxLength={8}
                       dir="ltr"
                       required
                       value={otpCode}
-                      onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                      placeholder="000000"
+                      onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 8))}
+                      placeholder="12345678"
                       className="command-input text-center text-lg font-black tracking-[0.28em]"
                       disabled={isVerifyingOtp}
                     />
