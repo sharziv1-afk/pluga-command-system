@@ -34,6 +34,8 @@ RLS policies for `public.users` were added manually in Supabase after profile cr
 - Role-based interface is working at a basic level: approved active commanders see commander dashboard content, Admin Panel navigation, and real user/role identity in the sidebar/header.
 - Personal profile page exists and displays the connected user and role.
 - A basic Supabase-backed requests/requirements module now exists at `/requests`.
+- The requests module was manually verified: request creation works and writes to `public.requests`.
+- RLS policies for `public.requests` were run manually in Supabase and work.
 - Core UI components exist: `GlassCard`, `GlossyButton`, `StatusBadge`, `EmptyState`.
 - The current UI pass introduced the **Light Gloss Command System**.
 
@@ -46,6 +48,9 @@ Manual testing passed after the commander RLS policies were applied in Supabase:
 - The Admin Panel appears for the מ״פ.
 - The personal profile page exists.
 - Sidebar and mobile header show the connected user and role.
+- `/requests` works.
+- A new request can be created and is saved in `public.requests`.
+- Approved + active commanders can see requests after the manual `public.requests` RLS policy update.
 
 ## Latest Design Change
 
@@ -121,11 +126,9 @@ npx tsc -p tsconfig.json --noEmit
 npm run build
 ```
 
-Then manually verify the basic requests/requirements module:
+Next recommended feature step:
 
-- Open `/requests`.
-- Create a request and confirm it is written to `public.requests`.
-- Confirm the row includes `title`, `description`, `status`, `request_type`, `requested_by`, `unit_id`, and `metadata`.
-- Confirm a commander can see/update requests and a regular user can at least see their own requests.
+- Build **Requests Workflow v1** with filters, queues, statistics, and status actions.
+- Preserve the verified basic request creation flow and manual Supabase RLS assumptions.
 
-Important: `/requests` is now a basic connected module, but it is not yet a complete request workflow.
+Important: `/requests` is now a manually verified basic connected module, but it is not yet a complete request workflow.

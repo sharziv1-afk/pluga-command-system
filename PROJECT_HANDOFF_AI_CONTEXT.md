@@ -51,6 +51,9 @@ Current known state:
 - Commander RLS policies for reading/managing user profiles were also run manually in Supabase and verified in the live project.
 - `public.users` was empty before the manual RLS policy update.
 - Basic `requests` table already exists in the schema and is used by the first requests/requirements module.
+- RLS policies for `public.requests` were run manually in Supabase and work.
+- Request creation from `/requests` was manually verified and writes to `public.requests`.
+- Approved + active commanders can see requests.
 - Do not change schema, seed, RLS, triggers, or database structure during design-only work.
 
 Requests schema currently used:
@@ -286,11 +289,11 @@ Check:
 
 ## Next Safe Steps
 
-1. Manually verify `/requests` with an approved active commander and a regular/non-commander user.
-2. Confirm that request creation writes a row to `public.requests`.
-3. Confirm RLS allows users to see their own requests and commanders to see/update all requests.
-4. If RLS blocks requests, add policies manually in Supabase; do not disable RLS or use service role keys.
-5. Continue from the basic requests/requirements module toward real request workflows only after the simple flow is verified.
+1. Continue to **Requests Workflow v1** with filters, queues, statistics, and status actions.
+2. Keep using the existing `public.requests` schema unless a future schema change is explicitly approved.
+3. Keep RLS enabled; if workflow status actions require additional policies, propose SQL for manual Supabase execution.
+4. Preserve the verified basic request creation flow and commander visibility.
+5. Do not turn the basic requests module into a broad tasks/workflow system without a scoped request.
 
 ## Guardrails For Future Agents
 

@@ -167,7 +167,14 @@ Current behavior:
 - `metadata` stores priority and creator display fields.
 - Existing `request_status` values are used: `open`, `in_progress`, `approved`, `rejected`, `completed`, `cancelled`.
 
-Manual RLS verification is still required for request creation, own-request reads, commander all-request reads/updates, and any professional-role category visibility.
+Manual verification passed:
+
+- Request creation works from `/requests`.
+- Requests are saved to `public.requests`.
+- RLS policies for `public.requests` were run manually in Supabase and work.
+- Approved + active commanders can see requests.
+
+The module is still a basic connected module. It is not yet a complete request workflow with filters, queues, statistics, and full status actions.
 
 ## Design System
 
@@ -238,9 +245,9 @@ Protected route checks are handled by `src/proxy.ts`.
 
 ## Next Safe Steps
 
-1. Manually verify `/requests` against Supabase RLS.
-2. Confirm request creation, listing, and commander status updates.
-3. Keep the module scoped: it is a basic connected module, not a complete workflow yet.
+1. Build **Requests Workflow v1** with filters, queues, statistics, and status actions.
+2. Keep RLS enabled and use only policies intentionally added in Supabase.
+3. Keep the module scoped: it is a verified basic connected module, not a complete workflow yet.
 4. Preserve the verified role-based interface, commander Admin Panel visibility, and Supabase RLS assumptions.
 5. Re-run `npm run lint`, `npx tsc -p tsconfig.json --noEmit`, and `npm run build` after changes.
 
