@@ -54,6 +54,7 @@ Current known state:
 - RLS policies for `public.requests` were run manually in Supabase and work.
 - Request creation from `/requests` was manually verified and writes to `public.requests`.
 - Approved + active commanders can see requests.
+- `supabase/migrations/002_rls_policies.sql` was added to version-control the `public.is_commander()` function and all RLS policies for `public.users` and `public.requests`. These were previously only applied manually. The file is idempotent (safe to re-run) and is intended for recovery or new-environment setup — it does NOT need to be re-run in the existing production database.
 - Do not change schema, seed, RLS, triggers, or database structure during design-only work.
 
 Requests schema currently used:

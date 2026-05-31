@@ -62,7 +62,11 @@ export async function fetchCurrentProfile(): Promise<Profile | null> {
 }
 
 export function mapDbUserToProfile(dbUser: DbUserProfile): Profile {
-  // Map 'role_approval_status' ('pending' | 'approved' | 'rejected') to local Profile 'status' ('pending' | 'approved' | 'rejected')
+  // Profile.status uses UserStatusType ('pending' | 'approved' | 'rejected'), which aligns with
+  // role_approval_status — not with dbUser.status ('active' | 'pending' | 'blocked' | 'inactive').
+  // This is intentional: the rest of the app (e.g. admin isAuthorized check) uses status === 'approved'.
+  // Changing to dbUser.status would break those checks. The DB status field (blocked/inactive) is
+  // not surfaced in the app-level Profile type at this stage.
   return {
     id: dbUser.id,
     email: dbUser.email,

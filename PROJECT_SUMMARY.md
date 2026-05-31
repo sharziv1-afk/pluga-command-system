@@ -19,6 +19,8 @@ The schema and seed were already run manually in Supabase. The seed file is kept
 
 RLS policies for `public.users` were added manually in Supabase after profile creation failed. `public.users` was empty before those policies were added. Commander RLS policies for reading/managing user profiles were also run manually in Supabase and verified.
 
+`supabase/migrations/002_rls_policies.sql` now documents the `public.is_commander()` helper function and all RLS policies for `public.users` and `public.requests` in version control. This file was not previously tracked in Git. It is idempotent and can be used to restore policies in a new or reset environment. It does not need to be re-run on the existing production database.
+
 ## What Has Been Done
 
 - Supabase client/server helpers are connected.

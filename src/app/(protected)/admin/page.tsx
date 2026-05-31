@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -62,7 +62,7 @@ export default function AdminPage() {
   const [editUnitId, setEditUnitId] = useState<string>('none');
   const [editPermissionLevel, setEditPermissionLevel] = useState<number>(0);
 
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   useEffect(() => {
     async function loadAdminData() {
@@ -101,7 +101,7 @@ export default function AdminPage() {
     if (currentUser) {
       loadAdminData();
     }
-  }, [currentUser]);
+  }, [currentUser, supabase]);
 
   // Authorization Check
   const isAuthorized = currentUser && (
